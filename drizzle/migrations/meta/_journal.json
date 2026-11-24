@@ -1,0 +1,90 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1789705659911,
+      "tag": "0000_startupbridge_core_schema",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1789705839846,
+      "tag": "0001_seed_demo_data",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1789705873669,
+      "tag": "0002_storage_policies",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1789706400000,
+      "tag": "0003_general_user_surveys",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1789707000000,
+      "tag": "0004_general_user_connection_restriction",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1789707600000,
+      "tag": "0005_general_user_document_restriction",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1789710000000,
+      "tag": "0006_founder_verification",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1789712000000,
+      "tag": "0007_verification_private_fields",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1789714000000,
+      "tag": "0008_verification_investor_fields",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1791637362051,
+      "tag": "0008_tighten_roles_and_votes_read_policies",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1791637511976,
+      "tag": "0009_tighten_profile_comment_analysis_read_policies",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1791700000000,
+      "tag": "0010_create_storage_buckets",
+      "breakpoints": true
+    }
+  ]
+}
