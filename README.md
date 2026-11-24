@@ -1,185 +1,467 @@
 # StartupBridge AI
 
-**Connect • Validate • Build • Grow** — an AI-assisted startup ecosystem that connects **founders**, **investors** and **general users** around real-world problems: discover problems, validate ideas with surveys and AI analysis, match with the right people, and track growth.
+**Connect · Validate · Build · Grow**
 
-Users register with their own email and password and choose a role (**Founder**, **Investor** or **General User**); a **Moderator** role can additionally be granted in the database. Authentication is handled by Supabase Auth and every table is protected by Row Level Security. A Supabase project is required for sign-up, sign-in and data.
+StartupBridge AI is an AI-assisted startup ecosystem platform that
+connects founders, investors, and general users around real-world
+problems. It supports problem discovery, startup idea validation,
+feedback collection, investor discovery, and collaboration.
 
----
+Users register with their own email and password and choose a role:
+**Founder**, **Investor**, or **General User**. A **Moderator** role can
+be assigned separately by an authorized administrator.
 
-## 1. Technology stack
+------------------------------------------------------------------------
 
-- **Framework:** [TanStack Start](https://tanstack.com/start) (React 19, TanStack Router, server functions, SSR) built with Vite 8 + Nitro
-- **Build configuration:** `vite.config.ts` uses the published npm package [`@lovable.dev/vite-tanstack-config`](https://www.npmjs.com/package/@lovable.dev/vite-tanstack-config), a thin wrapper that bundles the standard plugins (TanStack Start, React, Tailwind, tsconfig paths, Nitro). It installs from the public npm registry and does not require the Lovable editor or hosting. An **experimental, untested** wrapper-free alternative is provided in `vite.config.standalone.ts` (see *Build configuration* below)
-- **UI:** Tailwind CSS v4, shadcn/ui (Radix), lucide-react, Recharts
-- **Data:** TanStack Query, Supabase (Postgres, Auth, Storage), Zod validation
-- **Tooling:** TypeScript (strict), ESLint, Prettier, `bun test`
-- **Package manager:** [Bun](https://bun.sh) (`bun.lock`)
-- **AI (optional):** any OpenAI-compatible API; a built-in heuristic engine is used otherwise
+## Table of Contents
 
-## 2. Architecture
+-   [Key Features](#key-features)
+-   [Technology Stack](#technology-stack)
+-   [System Architecture](#system-architecture)
+-   [Project Structure](#project-structure)
+-   [Getting Started](#getting-started)
+-   [Environment Configuration](#environment-configuration)
+-   [Database Setup](#database-setup)
+-   [Authentication and Roles](#authentication-and-roles)
+-   [Development Commands](#development-commands)
+-   [Build and Deployment](#build-and-deployment)
+-   [Troubleshooting](#troubleshooting)
+-   [Disclaimer](#disclaimer)
 
+## Key Features
+
+### Founder
+
+-   Discover real-world problems and explore opportunities.
+-   Create and manage startup profiles.
+-   Manage startup milestones and documents.
+-   Create surveys and review feedback.
+-   View AI-assisted insights and potential investor matches.
+-   Manage connections with investors.
+
+### Investor
+
+-   Create an investor profile and specify investment preferences.
+-   Discover startups and review relevant information.
+-   Explore ranked startup matches.
+-   Save opportunities and manage connection requests.
+
+### General User
+
+-   Explore problems and startup opportunities.
+-   Submit problems, participate in surveys, and share feedback.
+-   Follow topics and engage with platform content.
+
+### Platform capabilities
+
+-   Role-based workspaces and protected routes.
+-   Supabase authentication and profile provisioning.
+-   Startup discovery and investor matching.
+-   AI-assisted analysis with a deterministic fallback engine.
+-   Notifications, messaging, connections, and moderation features where
+    enabled.
+
+> Feature availability depends on backend configuration, database
+> migrations, and external service credentials.
+
+## Technology Stack
+
+  -----------------------------------------------------------------------
+  Area                    Technologies            Purpose
+  ----------------------- ----------------------- -----------------------
+  Frontend                React 19, TypeScript    Interactive, typed user
+                                                  interface
+
+  Application framework   TanStack Start,         File-based routing,
+                          TanStack Router         server functions,
+                                                  server-side rendering
+
+  Build tooling           Vite 8, Nitro           Development server and
+                                                  application build
+
+  Styling and UI          Tailwind CSS 4,         Responsive styling and
+                          shadcn/ui, Radix UI     accessible UI
+                                                  components
+
+  Data fetching           TanStack Query          Client-side data
+                                                  fetching and caching
+
+  Backend services        Supabase                Authentication,
+                                                  database access, file
+                                                  storage
+
+  Database                PostgreSQL              Relational application
+                                                  data
+
+  Validation              Zod                     Runtime input and
+                                                  environment validation
+
+  Charts and icons        Recharts, lucide-react  Data visualization and
+                                                  interface icons
+
+  Development tools       TypeScript, ESLint,     Type checking and code
+                          Prettier                quality
+
+  Package manager         Bun                     Dependency installation
+                                                  and scripts
+
+  Optional AI             OpenAI-compatible API   AI-assisted analysis;
+                                                  heuristic fallback is
+                                                  available
+  -----------------------------------------------------------------------
+
+The current Vite configuration uses `@lovable.dev/vite-tanstack-config`
+as a configuration wrapper. It is installed from the public npm registry
+and does not require the Lovable editor or hosting. An alternative
+standalone Vite configuration is included, but it is experimental and
+has not been verified for production use.
+
+## System Architecture
+
+``` text
+                       ┌─────────────────────────┐
+                       │       Web Browser       │
+                       │   React + TypeScript    │
+                       └────────────┬────────────┘
+                                    │
+                    ┌───────────────┴────────────────┐
+                    │                                │
+                    ▼                                ▼
+          ┌──────────────────┐            ┌────────────────────┐
+          │ Supabase Client  │            │ TanStack Server    │
+          │ Publishable key  │            │ Functions          │
+          │ RLS-protected    │            │ Business logic     │
+          └────────┬─────────┘            └─────────┬──────────┘
+                   │                     ┌──────────┴──────────┐
+                   │                     ▼                     ▼
+                   │             ┌──────────────┐    ┌────────────────┐
+                   │             │ Auth         │    │ Server-only    │
+                   │             │ Middleware   │    │ Supabase Admin │
+                   │             │ JWT checks   │    │ Client         │
+                   │             └──────┬───────┘    └───────┬────────┘
+                   └────────────────────┴──────────┬─────────┘
+                                                   ▼
+                                      ┌────────────────────────┐
+                                      │ Supabase               │
+                                      │ PostgreSQL + Storage   │
+                                      │ Row Level Security     │
+                                      └────────────────────────┘
+
+                         Optional AI provider
+                         + heuristic fallback
 ```
-Browser ──► React routes ──► `supabase` client (src/integrations/supabase/client.ts)
-                │                 supabase-js, publishable key only, RLS enforced
-                │
-                └──► server functions (src/lib/*.functions.ts, run on the server)
-                          ├─ auth middleware  (src/integrations/supabase/auth-middleware.ts)
-                          │     verifies the user's JWT → RLS-scoped client
-                          └─ service-role client (client.server.ts) — server only
-                                used for profile/role creation after sign-up, notifications, audit logs, AI results
+
+### Request and security flow
+
+1.  The browser renders the React application and uses the Supabase
+    client with a publishable key for permitted user operations.
+2.  Protected server functions receive authenticated requests.
+3.  Authentication middleware verifies the user's JWT and establishes
+    the user context.
+4.  User-scoped operations remain subject to PostgreSQL Row Level
+    Security (RLS).
+5.  Privileged operations use the server-only Supabase service-role
+    client.
+6.  The service-role key must remain on the server and must never be
+    exposed in browser code.
+
+The service-role client is used for selected privileged operations such
+as profile/role provisioning and system writes. It must not replace
+user-level authorization.
+
+## Project Structure
+
+``` text
+StartupBridge-AI/
+├── public/                       # Static files, logos, favicon and PWA icons
+├── src/
+│   ├── routes/                   # Landing, authentication and app routes
+│   ├── components/               # Brand, layout and reusable UI components
+│   ├── lib/                      # Server functions, AI logic and utilities
+│   └── integrations/
+│       └── supabase/             # Supabase clients, middleware and types
+├── drizzle/
+│   └── migrations/               # Ordered SQL migrations and migration journal
+├── scripts/                      # Database migration and seed scripts
+├── docs/                         # Project documentation
+├── .env.example                  # Environment variable template
+├── package.json
+├── bun.lock
+├── vite.config.ts
+└── README.md
 ```
 
-- **Row Level Security** — all reads/writes from the browser go through RLS policies defined in `drizzle/migrations/`. Privileged work happens only in server functions using `SUPABASE_SERVICE_ROLE_KEY`, which is never sent to the browser.
-- **Roles** — `founder`, `investor`, `general_user` (chosen at sign-up and provisioned server-side) and `moderator` (granted manually).
-- `src/lib/demo/` contains an inactive, in-memory simulation that has no entry point in the UI. It is not used by the application and can be deleted together with `src/components/DemoModeBanner.tsx`.
+## Getting Started
 
-## 3. Folder structure
+### Prerequisites
 
-```
-src/
-  routes/                 File-based routes (landing, auth, forgot/reset password, _authenticated/* app)
-  components/             UI (brand/, layout/, ui/ = shadcn) 
-  lib/                    Server functions, constants, AI engine, auth provider, app-mode.ts (env + mode)
-  lib/demo/               Inactive simulation code (no UI entry point)
-  integrations/supabase/  Clients, auth middleware, generated DB types
-public/                   Static assets (brand/ logos, favicon, PWA icons, manifest)
-drizzle/migrations/       Ordered SQL migrations (schema, RLS, storage buckets & policies)
-scripts/                  db:migrate, db:seed, sample-data SQL
-docs/                     Original product brief and project notes
-.env.example              Every environment variable, with placeholders
+-   [Node.js](https://nodejs.org/) 20 or later.
+-   [Bun](https://bun.sh/) 1.1 or later.
+-   A [Supabase](https://supabase.com/) project.
+
+Install Bun if needed:
+
+``` bash
+npm install --global bun
 ```
 
-> **npm works too.** `npm install && npm run dev` serves the app on <http://localhost:8080> (the config wrapper's dev port; `bun run dev` is identical). The committed lockfile is `bun.lock`; the TanStack/Vite packages are pinned to exact versions in `package.json`, so npm resolves the same versions for them.
+### 1. Clone the repository
 
-## 4. Prerequisites
+``` bash
+git clone https://github.com/saksham-program/Startup-Bridge-Ai.git
+cd Startup-Bridge-Ai
+```
 
-- [Bun](https://bun.sh) ≥ 1.1 (`curl -fsSL https://bun.sh/install | bash`, or `npm i -g bun`)
-- Node.js ≥ 20 (used by the DB scripts and Node-based deployments)
-- *Supabase mode only:* a free [Supabase](https://supabase.com) project
+### 2. Install dependencies
 
-## 5. Installation
-
-```bash
-git clone <your-repo-url> startupbridge-ai
-cd startupbridge-ai
+``` bash
 bun install
-cp .env.example .env     # Windows PowerShell: Copy-Item .env.example .env
 ```
 
-> `bun.lock` originally pinned 122 packages to a private registry mirror that is not reachable outside the original platform; those URLs were replaced with the default public registry (integrity hashes unchanged). If `bun install` rewrites the lockfile, commit the result.
+The project includes `bun.lock`. Use Bun to keep dependency resolution
+consistent.
 
-## 6. Local development
+### 3. Create your local environment file
 
-```bash
+macOS/Linux:
+
+``` bash
+cp .env.example .env
+```
+
+Windows PowerShell:
+
+``` powershell
+Copy-Item .env.example .env
+```
+
+### 4. Configure Supabase
+
+Add your own values to `.env`. See [Environment
+Configuration](#environment-configuration).
+
+### 5. Start the development server
+
+``` bash
 bun run dev
 ```
 
-Open <http://localhost:5173>. Fill in `.env` first (next section); without Supabase settings the landing page loads but the sign-in and sign-up pages show a *Backend not configured* notice.
+Open the local URL printed in the terminal. The port may vary depending
+on the Vite configuration and port availability.
 
-### Creating an account and signing in
+## Environment Configuration
 
-1. Open **Get started** (`/get-started`), choose a role, fill in your details (name, email, a password of at least 8 characters and the role-specific fields) and accept the terms.
-2. If **Confirm email** is enabled in Supabase (Authentication → Providers → Email), a confirmation link is sent; sign in after confirming. Otherwise you are signed in immediately.
-3. On first sign-in the server creates your profile and role from your sign-up details, and you land in the workspace for your role. Protected routes redirect to `/auth` when signed out.
-4. **Sign in** at `/auth`; **Forgot password?** sends a reset link that opens `/reset-password`; **Log out** is in the account menu. Add your site URL to Supabase → Authentication → URL Configuration so e-mail links return to the app.
+The repository includes `.env.example` as a template. Create a local
+`.env` file and add your own credentials.
 
-## 7. Supabase configuration (real backend)
+  ---------------------------------------------------------------------------------
+  Variable                          Exposure                Purpose
+  --------------------------------- ----------------------- -----------------------
+  `VITE_SUPABASE_URL`               Browser-safe            Supabase project URL
 
-1. **Create a project** at <https://supabase.com/dashboard> (note the database password).
-2. **API keys** — Project Settings → API:
-   - `VITE_SUPABASE_URL` = Project URL
-   - `VITE_SUPABASE_PUBLISHABLE_KEY` = the **anon / publishable** key
-   - `VITE_SUPABASE_PROJECT_ID` = the project reference (informational)
-   - `SUPABASE_SERVICE_ROLE_KEY` = the **service_role / secret** key — **server only, never commit, never prefix with `VITE_`**
-3. **Database URL** — Project Settings → Database → Connection string → *URI* → `DATABASE_URL` (used only by the migration/seed scripts).
-4. **Auth settings** — Authentication → URL Configuration: add `http://localhost:5173` (and your production URL) to *Site URL / Redirect URLs* (required for sign-up confirmation and `/reset-password` links).
-5. Restart `bun run dev`. Missing or invalid variables are reported with the exact variable name.
+  `VITE_SUPABASE_PUBLISHABLE_KEY`   Browser-safe            Supabase
+                                                            publishable/anon key
 
-### Database migrations
+  `VITE_SUPABASE_PROJECT_ID`        Browser-safe            Supabase project
+                                                            reference
 
-```bash
+  `SUPABASE_SERVICE_ROLE_KEY`       **Server only**         Privileged server-side
+                                                            operations
+
+  `DATABASE_URL`                    Scripts/server only     Database migration and
+                                                            seed scripts
+
+  `AI_API_KEY`                      **Server only**         Optional AI provider
+                                                            credential
+
+  `AI_BASE_URL`                     Server only             Optional
+                                                            OpenAI-compatible API
+                                                            endpoint
+
+  `AI_MODEL`                        Server only             Optional model
+                                                            identifier
+
+  `NITRO_PRESET`                    Build time              Nitro deployment target
+  ---------------------------------------------------------------------------------
+
+### Security requirements
+
+-   Never commit `.env` or `.env.local`.
+-   Commit `.env.example` with placeholder values only.
+-   Never prefix `SUPABASE_SERVICE_ROLE_KEY` or AI secrets with `VITE_`.
+-   Never put server secrets in frontend components or
+    browser-accessible code.
+-   Configure production secrets in the hosting platform's server-side
+    environment.
+-   Rotate any secret that has been committed or exposed.
+
+If Supabase environment variables are missing, the landing page may
+still load, but authentication and backend features will not work until
+configuration is completed.
+
+## Database Setup
+
+The application uses Supabase PostgreSQL. SQL migrations are stored in
+`drizzle/migrations/`.
+
+### Apply migrations
+
+Configure `DATABASE_URL` in `.env`, then run:
+
+``` bash
 bun run db:migrate
 ```
 
-Applies `drizzle/migrations/*.sql` in journal order (two files share the prefix `0008`, so order follows `meta/_journal.json`), exactly once each (tracked in `public.app_migrations`), each inside a transaction. Use it on a **fresh** database; if your database was already migrated by another tool, do not re-run it. Existing migrations were deliberately **not renamed or edited**; additions are new files (`0010_create_storage_buckets.sql`) plus a journal entry for the previously unlisted `0004`. They create the schema, enums, triggers, Row Level Security policies, the private `media` and `pitch-decks` storage buckets and their storage policies. You can alternatively paste the files into the Supabase SQL editor in order.
+The migration runner applies migrations in the order recorded in
+`drizzle/migrations/meta/_journal.json` and tracks applied migrations in
+`public.app_migrations`.
 
-### Sample data (optional)
+**Important:** Review the target database before running migrations. The
+migration set establishes the application schema and related policies.
+Do not blindly rerun or manually reorder migrations on a database that
+has already been migrated by another process.
 
-Migration `0001_seed_demo_data.sql` inserts sample profiles, problems, startups, surveys and messages so the discovery pages are populated. These are plain records; they are **not login accounts**. Optionally add ten more illustrative startups:
+Migrations define the database schema, roles and policies, triggers, and
+storage configuration. Do not rename or edit migration files that have
+already been applied to a shared database. Use new migration files for
+future schema changes.
 
-```bash
+### Sample data
+
+The initial seed migration includes illustrative records such as sample
+profiles, problems, startups, surveys, and messages. These records are
+application data; they are **not login accounts** and cannot be used to
+sign in.
+
+To add the additional sample startup catalogue, run:
+
+``` bash
 bun run db:seed
 ```
 
-(Guarded and safe to re-run.) If you do not want sample data in a brand-new production project, remove `0001_seed_demo_data.sql` (and its journal entry) **before the first apply** — never on a database where it has already run.
+The sample startup seed script is designed to be safe to rerun. Review
+the script and target database before using it in production.
 
-### Make yourself a moderator (optional)
+### Moderator role
 
-```sql
-insert into public.user_roles (user_id, role) values ('<your auth user id>', 'moderator');
-```
+A moderator role can be granted to an existing authenticated user by an
+authorized database administrator. Use the authenticated user's actual
+ID and follow the project's access-control procedures.
 
-## 8. Environment variables
+## Authentication and Roles
 
-See [`.env.example`](./.env.example) — it documents every variable.
+Users create their own accounts through the registration page using an
+email address and password.
 
-| Variable | Scope | Purpose |
-|---|---|---|
-| `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `VITE_SUPABASE_PROJECT_ID` | browser-safe | Supabase connection |
-| `SUPABASE_SERVICE_ROLE_KEY` | **server only** | Profile/role creation, notifications, audit logs, AI results |
-| `DATABASE_URL` | scripts only | `db:migrate`, `db:seed` |
-| `AI_API_KEY`, `AI_BASE_URL`, `AI_MODEL` | **server only** | Optional OpenAI-compatible provider |
-| `NITRO_PRESET` | build time | Deployment target (wrapper default: Cloudflare) |
+Supported roles: - **Founder** --- manages startup information and
+founder activities. - **Investor** --- manages investment preferences
+and discovers startups. - **General User** --- explores problems and
+participates in platform activities. - **Moderator** --- an additional
+role assigned separately where moderation access is required.
 
-`.env` / `.env.local` are git-ignored. Only `.env.example` (placeholders) is tracked.
+Supabase Auth manages authentication. The application provisions the
+user's profile and role through server-side logic. Protected routes
+require an authenticated session and enforce role-specific access.
 
-## 9. Quality checks
+There are no shared demo login credentials. Sample database records do
+not provide accounts that can be used to sign in.
 
-```bash
-bun run typecheck   # tsc --noEmit
-bun run lint        # eslint
-bun test            # unit tests (config, seed & migration integrity, AI engine …)
-bun run build       # production build
-```
+For email confirmation and password reset links, configure local and
+production URLs in **Supabase → Authentication → URL Configuration**.
 
-The brand icon was reconstructed from the project's `public/favicon.ico` (48 px was the only source resolution); if you have a higher-resolution original, replace `public/brand/*`, `public/icon-*.png` and `public/apple-touch-icon.png`.
+## Development Commands
 
-## 10. Production build & deployment
+  Command                Purpose
+  ---------------------- ---------------------------
+  `bun install`          Install dependencies
+  `bun run dev`          Start local development
+  `bun run typecheck`    Run TypeScript checks
+  `bun run lint`         Run ESLint
+  `bun test`             Run the test suite
+  `bun run build`        Create a production build
+  `bun run db:migrate`   Apply database migrations
+  `bun run db:seed`      Add sample startup data
 
-```bash
+Use the package manager and scripts defined by the repository. If using
+npm, check `package.json` for the available scripts and use the matching
+lockfile consistently.
+
+## Build and Deployment
+
+Create a production build:
+
+``` bash
 bun run build
 ```
 
-`vite.config.ts` delegates Nitro to the config wrapper, whose documented default deployment target is **Cloudflare**. Where the output goes and how to run it therefore depends on the Nitro preset; to choose another target set `NITRO_PRESET` at build time (for example `NITRO_PRESET=node-server`, `vercel`, `netlify`, `bun`; see the [Nitro deployment docs](https://nitro.build/deploy)). This preset override and the Node run command (`node .output/server/index.mjs`) are standard Nitro behaviour but **have not been exercised against this exact setup**.
+The primary build configuration is `vite.config.ts`, which uses the
+project's TanStack/Vite configuration wrapper and Nitro.
 
-### Build configuration
+The repository also contains `vite.config.standalone.ts` with explicit
+plugins and a Node-oriented output configuration. The standalone scripts
+are experimental and have not been verified against the complete
+deployment setup. Use the primary configuration unless you have tested
+the standalone alternative.
 
-| Script | Config | Status |
-|---|---|---|
-| `bun run dev` / `build` / `preview` | `vite.config.ts` (wrapper) | The configuration the project was developed with |
-| `bun run dev:standalone` / `build:standalone` / `start:standalone` | `vite.config.standalone.ts` (explicit plugins, Node server output) | **Experimental, never built** — written from the official plugin APIs; use it only if you want to drop the wrapper and be ready to adjust the Nitro options |
+The Nitro deployment preset can be configured using `NITRO_PRESET`. The
+correct preset and runtime command depend on the hosting provider.
+Verify the selected deployment target before publishing.
 
-Set the same environment variables in your host's dashboard — `VITE_*` values must be present **at build time**; server secrets at **runtime**.
+### Production checklist
 
-Production checklist: apply migrations to the production Supabase project, decide deliberately about sample data (see above), enable e-mail confirmation in Supabase, add the production URL to Supabase *Redirect URLs*, keep `SUPABASE_SERVICE_ROLE_KEY` in the server secret store only.
+-   Apply and verify database migrations.
+-   Configure all required environment variables in the hosting
+    provider.
+-   Keep service-role and AI credentials server-side.
+-   Configure Supabase authentication redirect URLs.
+-   Decide whether illustrative sample data belongs in the production
+    database.
+-   Verify RLS policies and storage permissions.
+-   Test registration, sign-in, role access, and core workflows in the
+    deployed environment.
 
-## 11. Troubleshooting
+## Troubleshooting
 
-| Symptom | Fix |
-|---|---|
-| Sign-in page shows *"Backend not configured"* | Fill `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` in `.env` and restart. |
-| A page shows *"… didn’t load"* with a **Try again** button | A request failed and the page now shows the real reason instead of loading forever. Typical causes: a missing/invalid `.env` value, a database migration that has not been applied (`bun run db:migrate`), or no network. Requests are also capped at 30 s (reads) / 120 s (writes) so nothing can hang indefinitely. |
-| Terminal warnings about `inputValidator` or `vite-tsconfig-paths` | Harmless deprecation notices. The installed TanStack version (1.168.60, pinned) documents `.inputValidator(...)`, so it was intentionally not renamed; check with `npm ls @tanstack/react-start`. The `vite-tsconfig-paths` plugin comes from the config wrapper. |
-| Dashboard says *"Your workspace didn't load"* / sidebar shows `?` and `…` for a new account | The profile could not be created. The error text on the page says why; the usual cause is `SUPABASE_SERVICE_ROLE_KEY` missing from `.env` (restart after adding it). Signing in again then completes the setup automatically, including for accounts whose sign-up was interrupted. |
-| *"SUPABASE_SERVICE_ROLE_KEY is not set"* right after signing in | Add the key to the **server** environment (`.env`) and restart; it is needed to create your profile. |
-| Sign-up e-mail link or password reset goes to the wrong page | Add your URL to Supabase → Authentication → URL Configuration. |
-| Uploads fail with "bucket not found" | Re-run `bun run db:migrate` (migration `0002` creates the buckets). |
-| `bun install` fails on a registry URL | You have an old lockfile; use the one in this repo (cleaned) and run `bun install`. |
-| Logo or icons missing | They are static files in `public/` (`brand/startupbridge-icon-*.webp`, `favicon.ico`, `icon-*.png`, `apple-touch-icon.png`); make sure `public/` was copied. |
-| Port already in use | `bun run dev -- --port 3001` |
+  ----------------------------------------------------------------------------
+  Problem                                  What to check
+  ---------------------------------------- -----------------------------------
+  Backend configuration notice             Check `VITE_SUPABASE_URL` and
+                                           `VITE_SUPABASE_PUBLISHABLE_KEY` in
+                                           `.env`, then restart the server.
 
-## 12. Disclaimer
+  `SUPABASE_SERVICE_ROLE_KEY is not set`   Configure the server-only key in
+                                           the local/server environment. Do
+                                           not add a `VITE_` prefix.
 
-StartupBridge AI facilitates discovery and communication. It does not guarantee investment returns or startup success. AI output is indicative only.
-#   S t a r t u p - B r i d g e - A i  
- 
+  Sign-up or password-reset links return   Add the local or production URL to
+  to the wrong URL                         Supabase Authentication URL
+                                           Configuration.
+
+  Storage bucket not found                 Verify that storage-related
+                                           migrations have been applied to the
+                                           correct Supabase project.
+
+  Database migration fails                 Check `DATABASE_URL`, database
+                                           permissions, migration journal
+                                           state, and whether earlier
+                                           migrations have already been
+                                           applied.
+
+  Logo or icons are missing                Confirm that required static assets
+                                           are present in `public/` and their
+                                           paths match the code.
+
+  Development port is already in use       Stop the other process or start
+                                           Vite with another available port.
+  ----------------------------------------------------------------------------
+
+For persistent errors, inspect the browser console and terminal output.
+Resolve the underlying configuration, network, database, or
+authorization issue rather than hiding the error.
+
+## Disclaimer
+
+StartupBridge AI supports startup discovery, feedback collection,
+analysis, and communication. AI-generated insights and matching results
+are indicative and should be reviewed by users. The platform does not
+guarantee investment, funding, business success, or investment returns.
